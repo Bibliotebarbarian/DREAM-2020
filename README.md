@@ -3,7 +3,7 @@
 
 
 
-## PROGRAMMI-----------------------------------------------------------------------------
+## PROGRAMMI
 File|Descrizione
 -|-
 **daqvero.cpp** 				|	 File cpp, interfaccia con il daq
@@ -18,6 +18,6 @@ File|Descrizione
 **tempGraph.c**					|	 Macro Root, fa il grafico della temperatura in funzione dell'evento dai dati analizzati da analisia10magg
 
 
-## ALTRO---------------------------------------------------------------------------------
+## ALTRO
 
 
