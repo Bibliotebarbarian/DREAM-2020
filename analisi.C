@@ -9,7 +9,7 @@
 	
 #include <string>
 #include <cmath>
-void analisia10magg(TString file){
+void analisi(TString file){
 	
 	//double signalAmplitude=1000;
 	//double signalPeriod=900;
@@ -17,17 +17,20 @@ void analisia10magg(TString file){
 	TCanvas *c0 = new TCanvas("c0","c0",300,10,600,600);
 	//TCanvas *c1 = new TCanvas("c1","c1",300,10,600,600);
 	
-	TFile fin(file.Data(), "UPDATE");
-	fin.cd();
-	TTree* t1 = (TTree*)fin.Get("datatree");
+	TFile fin(file.Data());
+	
+	TTree* t2 = (TTree*)fin.Get("datatree");
+	
+	TFile output("Analysis.root", "RECREATE");
+	output.cd();
+	TTree* t1= t2->CopyTree("nsample>1");
+	
 	
 	Long64_t nentries = t1->GetEntries();
 	
-	Int_t k;
-	Int_t l;
 	Int_t count=0;
 	
-	Int_t control[4];
+	Int_t control[4]={0};
 	Int_t kappaStart;
 	Int_t kappaEnd;					//Variabili di supporto
 		
@@ -62,6 +65,8 @@ void analisia10magg(TString file){
 		
 		
 	Double_t time[1000]={0};
+	Double_t meanTime;
+	Double_t shiftedStart[4]={0};
 	Int_t nsample;
 	
 	
@@ -73,34 +78,17 @@ void analisia10magg(TString file){
 	t1->SetBranchAddress("ch4", &channels[2]);
 	t1->SetBranchAddress("ch6", &channels[3]);
 	
-	TObjArray* branchList = t1->GetListOfBranches();
-	
-	if(branchList->GetLast()>11){                                     //elimino branch non nativi del daq se già presenti
-	  
-	  TBranch* signalMin_eraser = t1->GetBranch("signalMin");
-	  TBranch* signalStart_eraser = t1->GetBranch("signalStart");
-	  TBranch* signalEnd_eraser = t1->GetBranch("signalEnd");
-	  TBranch* signalDuration_eraser = t1->GetBranch("signalDuration");
-	  TBranch* chargeValue_eraser = t1->GetBranch("chargeValue");
-	  TBranch* isGoodEvent_eraser = t1->GetBranch("isGoodEvent");
-	  
-	  branchList->Remove(signalMin_eraser);
-	  branchList->Remove(signalStart_eraser);
-	  branchList->Remove(signalEnd_eraser);
-	  branchList->Remove(signalDuration_eraser);
-	  branchList->Remove(chargeValue_eraser);
-	  branchList->Remove(isGoodEvent_eraser);
-	  
-	  t1->Write();
-	  
-	} 
+	t1->Print();
 	
 	TBranch* signalMinBranch = t1 -> Branch("signalMin", minpoint, "minpoint[4]/L");
 	TBranch* signalStartBranch = t1 -> Branch("signalStart", signalStart, "signalStart[4]/L");
 	TBranch* signalEndBranch = t1 -> Branch("signalEnd", signalEnd, "signalEnd[4]/L");
 	TBranch* signalDurationBranch = t1 -> Branch("signalDuration", signalDuration, "signalDuration[4]/L");
+	TBranch* shiftedStartBranch = t1 -> Branch("shiftedStart", shiftedStart, "shiftedStart[4]/D");
 	TBranch* chargeValueBranch = t1 -> Branch("chargeValue", chargeValue, "chargeValue[4]/D");
-	TBranch* isGoodEventFlag = t1 -> Branch("isGoodEvent", &isGoodEvent, "isGoodEvent/I");                 //Creo Branch per i nuovi dati che mi sto calcolando
+	TBranch* isGoodEventFlag = t1 -> Branch("isGoodEvent", &isGoodEvent, "isGoodEvent/I");     //Creo Branch per i nuovi dati che mi sto calcolando
+	
+	
 	
 	
 	
@@ -114,12 +102,12 @@ void analisia10magg(TString file){
 			signalStart[ii] = 0;
 			signalEnd[ii] = 0;
 			signalDuration[ii] = 0;
+			shiftedStart[ii] = 0;
 			chargeValue[ii] = 0;
 			media[ii]=0;
 			sigma[ii]=0;
 		}
 		isGoodEvent=0;
-		fin.cd();
 		
 		    
 		t1->GetEntry(entry);
@@ -139,7 +127,9 @@ void analisia10magg(TString file){
 			media[j]/=INITIALSAMPLES;		//calcolo della media
 			sigma[j]/=INITIALSAMPLES;
 			sigma[j]-=media[j]*media[j];	// calcolo della deviazione standard
-		    sigma[j]=sqrt(abs(sigma[j]));
+		        sigma[j]=sqrt(abs(sigma[j]));
+			
+			
 			
 			for(int i=0; i<nsample-1; i++){
 		   
@@ -178,12 +168,7 @@ void analisia10magg(TString file){
 			
 		
 		
-		   
-		/*TF1 *fitFunction = new TF1("fitFunction", "[0]+[1]*sin(2*Pi()*x/[2]+[3])",0,nsample);
-		fitFunction->SetParameter(0,0);
-		fitFunction->SetParameter(1,signalAmplitude);
-		fitFunction->SetParameter(2,signalPeriod);
-		fitFunction->SetParameter(3,0);*/
+		
 			
 			
 			
@@ -201,26 +186,38 @@ void analisia10magg(TString file){
 				while(kappaStart || kappaEnd){  
 					signalStart[u] -= kappaStart;
 					signalEnd[u] += kappaEnd;
-					if(kappaStart && doubleCh[u][signalStart[u]] > STARTCUTOFF * min[u] && signalStart[u] > 0){    //I cutoff sono separati in caso servisse
+					if(kappaStart && doubleCh[u][signalStart[u]] >= -5. * sigma[u] && signalStart[u] > 0){    //I cutoff sono separati in caso servisse
 						kappaStart=0;
 			  		}
-					if(kappaEnd && doubleCh[u][signalEnd[u]] > ENDCUTOFF * min[u] && signalStart[u] < nsample-1){
+					if(kappaEnd && doubleCh[u][signalEnd[u]] > -5. * sigma[u] && signalStart[u] < nsample-1){
 			    			kappaEnd=0;
-			  		}
+			  		} else if(kappaEnd == nsample-1){
+						kappaEnd=0;
+					}
 				}
 				signalDuration[u] = signalEnd[u] - signalStart[u];
 				for(int z=signalStart[u]+1; z < signalEnd[u]; z++){         //Stiamo tenendo i primi due punti che superano il cutoff, eventualmente si scartano
 			  		chargeValue[u] += (doubleCh[u][z]*time[z]);
 				}
 		    	}
-		
-		      
+		    	
+		    	meanTime=(signalStart[2]+signalStart[3])/2.;
+			
+			
+			for(int kk=0; kk<4; kk++){
+			      shiftedStart[kk]-=meanTime;
+			}
+			
+		     
 			signalMinBranch->Fill();
 			signalStartBranch->Fill();
 			signalEndBranch->Fill();
 			signalDurationBranch->Fill();
+			shiftedStartBranch->Fill();
 			chargeValueBranch->Fill();
 			isGoodEventFlag->Fill();
+			
+			
 		      
 		
 		
@@ -302,7 +299,9 @@ void analisia10magg(TString file){
 			
 	}
 	
-	fin.cd();
-	t1->Write();
+	
+	t1->Write("analysisTree");
 	cout<<"Il numero di eventi selezionati è:  "<<count<<endl;   // stampa il numero di grafici "buoni"
+	fin.Close();
+	output.Close();
 }
