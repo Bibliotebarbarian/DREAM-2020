@@ -186,17 +186,18 @@ void analisi(TString file){
 				while(kappaStart || kappaEnd){  
 					signalStart[u] -= kappaStart;
 					signalEnd[u] += kappaEnd;
-					if(kappaStart && doubleCh[u][signalStart[u]] >= -5. * sigma[u] && signalStart[u] > 0){    //I cutoff sono separati in caso servisse
+					if(kappaStart && (signalStart[u] == 0 || doubleCh[u][signalStart[u]] >= -5. * sigma[u])){    //I cutoff sono separati in caso servisse
 						kappaStart=0;
 			  		}
-					if(kappaEnd && doubleCh[u][signalEnd[u]] > -5. * sigma[u] && signalStart[u] < nsample-1){
+					if(kappaEnd && (signalEnd[u] == nsample-1 || doubleCh[u][signalEnd[u]] > -5. * sigma[u])){
 			    			kappaEnd=0;
 			  		} else if(kappaEnd == nsample-1){
 						kappaEnd=0;
 					}
 				}
+				shiftedStart[u] = signalStart[u];
 				signalDuration[u] = signalEnd[u] - signalStart[u];
-				for(int z=signalStart[u]+1; z < signalEnd[u]; z++){         //Stiamo tenendo i primi due punti che superano il cutoff, eventualmente si scartano
+				for(int z=signalStart[u]; z <= signalEnd[u]; z++){         //Stiamo tenendo i primi due punti che superano il cutoff, eventualmente si scartano
 			  		chargeValue[u] += (doubleCh[u][z]*time[z]);
 				}
 		    	}
