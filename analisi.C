@@ -4,7 +4,7 @@
 #define ENDCUTOFF .15
 #define SCALING 0.2393
 #define TIME_ERROR 0.0004
-#define SATURATION_VALUE -52.
+#define SATURATION_VALUE -990.
 	
 	
 #include <string>
@@ -166,11 +166,11 @@ void analisi(TString file){
 			for(int i=0; i<nsample-1; i++){
 		   
 		   
-				time[i]= 0.9866*i;
+				time[i]= i/0.9866;
 				
 				doubleCh[j][i] = (channels[j][i]-media[j]);	//offset + passaggio a double 
 				
-				doubleCh[j][i]*=SCALING;		//Riscalamento	dei canali
+				doubleCh[j][i]/=SCALING;		//Riscalamento	dei canali
 			
 				errx[i] = TIME_ERROR*time[i];
 				erry[j][i] =0.0002*doubleCh[j][i];	//errori
@@ -178,8 +178,8 @@ void analisi(TString file){
 			// cout << entry << " " << i << " " << ch4[i] << endl;
 		    
 			}
-			media[j]*=SCALING;		//Riscalamento media e stddev
-			sigma[j]*=SCALING;
+			media[j]/=SCALING;		//Riscalamento media e stddev
+			sigma[j]/=SCALING;
 		}
 		   
 
@@ -190,13 +190,15 @@ void analisi(TString file){
 			minpoint[l]=TMath::LocMin(1000, doubleCh[l]);	//trova il punto dell'array corrispondente al minimo
 			
 			if(min[l]< -5.*sigma[l] && doubleCh[l][minpoint[l]+1]<0. && doubleCh[l][minpoint[l]+2]<0. && doubleCh[l][minpoint[l]+3]<0. && min[l] > SATURATION_VALUE){   
-			//controlla se il minimo è oltre 5 sigma e che i 3 punti successivi siano minori di zero				
-				if(minpoint[l]<=(nsample/2) ){    
-				//controlla se il minimo si trova prima di metà dei dati    (potrebbe essere modificato per controllare che sia attorno al tempo del trigger)
+			//controlla se il minimo è oltre 5 sigma e che i 3 punti successivi siano minori di zero			
+				//controlla se il minimo si trova prima di metà dei dati    (potrebbe essere modificato per controllare che sia attorno al tempo del trigger
+				if(minpoint[l]<=(nsample/2)){
 					control[l]=1;
 				}
 			}
 		}
+		
+		
 			
 		
 		
@@ -282,7 +284,7 @@ void analisi(TString file){
 			//GRAFICI----------------------------------------------
 		
 		      
-		
+
 			TGraphErrors* WF0 = new TGraphErrors(nsample-1,time,doubleCh[0],errx,erry[0]);
 			//TGraph* WF1 = new TGraph(nsample,time,ch1);
 			TGraphErrors* WF2 = new TGraphErrors(nsample-1,time,doubleCh[1],errx,erry[1]);
