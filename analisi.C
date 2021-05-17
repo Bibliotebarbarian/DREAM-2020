@@ -15,7 +15,36 @@ void analisi(TString file){
 	//double signalPeriod=900;
 	
 	TCanvas *c0 = new TCanvas("c0","c0",300,10,600,600);
-	//TCanvas *c1 = new TCanvas("c1","c1",300,10,600,600);
+	TCanvas *c1 = new TCanvas("c1","c1",1000,10,600,600);
+	TCanvas *c2 = new TCanvas("c2","c2", 1000,700,600,600);
+	c1->Divide(2,2);
+	c2->Divide(2,2);
+	
+	TH1I *ChargeHist0 = new TH1I();
+	TH1F *StartHist0 = new TH1F();
+	
+	//istogrammi della distribuzione delle cariche e del punto di inizio traslato
+	
+	ChargeHist0->SetNameTitle("Istogramma Cariche Cherenkov","Distribuzione Integrali delle forme d'onda Cherenkov");
+	StartHist0->SetNameTitle("Istogramma Starting Point Cherenkov", "Distribuzione del punto di inizio Cherenkov rispetto alla media dei PMT");
+	
+	TH1I *ChargeHist2 = new TH1I();
+	TH1F *StartHist2 = new TH1F();
+	
+	ChargeHist2->SetNameTitle("Istogramma Cariche Scintillatore","Distribuzione Integrali delle forme d'onda Scintillatore");
+	StartHist2->SetNameTitle("Istogramma Starting Point Scintillatore","Distribuzione del punto di inizio dello Scintillatore rispetto alla media dei PMT");
+	
+	TH1I *ChargeHist4 = new TH1I();
+	TH1F *StartHist4 = new TH1F();
+	
+	ChargeHist4->SetNameTitle("Istogramma Cariche PMT1","Distribuzione Integrali delle forme d'onda PMT1");
+	StartHist4->SetNameTitle("Istogramma Starting Point PMT1","Distribuzione del punto di inizio del PMT1 rispetto alla media dei PMT");
+	
+	TH1I *ChargeHist6 = new TH1I();
+	TH1F *StartHist6 = new TH1F();
+
+	ChargeHist6->SetNameTitle("Istogramma Cariche PMT2","Distribuzione Integrali delle forme d'onda PMT2");
+	StartHist6->SetNameTitle("Istogramma Starting Point PMT2","Distribuzione del punto di inizio del PMT2 rispetto alla media dei PMT");
 	
 	TFile fin(file.Data());
 	
@@ -69,6 +98,11 @@ void analisi(TString file){
 	Double_t shiftedStart[4]={0};
 	Int_t nsample;
 	
+	Double_t maxStart[4]={0};
+	Double_t minStart[4]={1000,1000,1000,1000};
+	
+	Int_t minCharge[4]={0};
+	Int_t maxCharge[4]={-500000,-500000,-500000,-500000};
 	
 		
 	t1->SetBranchAddress("nsample",&nsample);
@@ -186,29 +220,42 @@ void analisi(TString file){
 				while(kappaStart || kappaEnd){  
 					signalStart[u] -= kappaStart;
 					signalEnd[u] += kappaEnd;
-					if(kappaStart && (signalStart[u] == 0 || doubleCh[u][signalStart[u]] >= -5. * sigma[u])){    //I cutoff sono separati in caso servisse
+					if(kappaStart && doubleCh[u][signalStart[u]] >= -5. * sigma[u] && signalStart[u] > 0){    //I cutoff sono separati in caso servisse
 						kappaStart=0;
 			  		}
-					if(kappaEnd && (signalEnd[u] == nsample-1 || doubleCh[u][signalEnd[u]] > -5. * sigma[u])){
+					if(kappaEnd && doubleCh[u][signalEnd[u]] > -5. * sigma[u] && signalStart[u] < nsample-1){
 			    			kappaEnd=0;
 			  		} else if(kappaEnd == nsample-1){
 						kappaEnd=0;
 					}
 				}
-				shiftedStart[u] = signalStart[u];
 				signalDuration[u] = signalEnd[u] - signalStart[u];
-				for(int z=signalStart[u]; z <= signalEnd[u]; z++){         //Stiamo tenendo i primi due punti che superano il cutoff, eventualmente si scartano
+				for(int z=signalStart[u]+1; z < signalEnd[u]; z++){         //Stiamo tenendo i primi due punti che superano il cutoff, eventualmente si scartano
 			  		chargeValue[u] += (doubleCh[u][z]*time[z]);
 				}
+				if(chargeValue[u]>maxCharge[u]){                       //aggiorno valore del massimo e minimo della carica per gli istogrammi
+				    maxCharge[u]=chargeValue[u];
+				} 
+				if(chargeValue[u]<minCharge[u]){
+				    minCharge[u]=chargeValue[u];
+				}
+				 
+				
 		    	}
 		    	
 		    	meanTime=(signalStart[2]+signalStart[3])/2.;
 			
 			
-			for(int kk=0; kk<4; kk++){
-			      shiftedStart[kk]-=meanTime;
+			for(int kk=0; kk<4; kk++){                                //traslo il punto di partenza e aggiorno il valore massimo e minimo per gli istogrammi
+			      shiftedStart[kk]=signalStart[kk]-meanTime;
+						      
+			      if(shiftedStart[kk]>maxStart[kk]){
+				    maxStart[kk]=shiftedStart[kk];
+			      } 
+			      if(shiftedStart[kk]<minStart[kk]){
+				    minStart[kk]=shiftedStart[kk];
+			      } 
 			}
-			
 		     
 			signalMinBranch->Fill();
 			signalStartBranch->Fill();
@@ -217,6 +264,18 @@ void analisi(TString file){
 			shiftedStartBranch->Fill();
 			chargeValueBranch->Fill();
 			isGoodEventFlag->Fill();
+			
+			
+			ChargeHist0->Fill(chargeValue[0]);                   //riempio istogrammi
+			ChargeHist2->Fill(chargeValue[1]);
+			ChargeHist4->Fill(chargeValue[2]);
+			ChargeHist6->Fill(chargeValue[3]);
+			
+			
+			StartHist0->Fill(shiftedStart[0]);
+			StartHist2->Fill(shiftedStart[1]);
+			StartHist4->Fill(shiftedStart[2]);
+			StartHist6->Fill(shiftedStart[3]);
 			
 			
 		      
@@ -273,6 +332,44 @@ void analisi(TString file){
 			WF6-> GetXaxis()->SetTitle("Time (ns)");
 			WF6-> GetYaxis()->SetTitle("Voltage (mV)");
 			WF6->Draw();
+			
+			gPad->Update();
+			
+			ChargeHist0->SetBins(10,minCharge[0],maxCharge[0]);                    //disegno istogrammi
+			ChargeHist2->SetBins(15,minCharge[1],maxCharge[1]);
+			ChargeHist4->SetBins(15,minCharge[2],maxCharge[2]);
+			ChargeHist6->SetBins(15,minCharge[3],maxCharge[3]);
+			
+			StartHist0->SetBins(15,minStart[0],maxStart[0]);
+			StartHist2->SetBins(15,minStart[1],maxStart[1]);
+			StartHist4->SetBins(15,minStart[2],maxStart[2]);
+			StartHist6->SetBins(15,minStart[3],maxStart[3]);
+			
+			c1->cd(1);
+			ChargeHist0->Draw();
+			
+			c1->cd(2);
+			ChargeHist2->Draw();
+			
+			c1->cd(3);
+			ChargeHist4->Draw();
+			
+			c1->cd(4);
+			ChargeHist6->Draw();
+			
+			gPad->Update();
+			
+			c2->cd(1);
+			StartHist0->Draw();
+			
+			c2->cd(2);
+			StartHist2->Draw();
+			
+			c2->cd(3);
+			StartHist4->Draw();
+			
+			c2->cd(4);
+			StartHist6->Draw();
 			gPad->Update();
 			c0->WaitPrimitive();
 			//c0->Clear();
@@ -300,6 +397,9 @@ void analisi(TString file){
 			
 	}
 	
+	
+	
+
 	
 	t1->Write("analysisTree");
 	cout<<"Il numero di eventi selezionati è:  "<<count<<endl;   // stampa il numero di grafici "buoni"
