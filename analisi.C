@@ -333,15 +333,15 @@ void analisi(TString file){
 			
 			gPad->Update();
 			
-			ChargeHist0->SetBins(10,minCharge[0],maxCharge[0]);
-			ChargeHist2->SetBins(15,minCharge[1],maxCharge[1]);
-			ChargeHist4->SetBins(15,minCharge[2],maxCharge[2]);
-			ChargeHist6->SetBins(15,minCharge[3],maxCharge[3]);
+			ChargeHist0->SetBins(20,minCharge[0],maxCharge[0]);
+			ChargeHist2->SetBins(20,minCharge[1],maxCharge[1]);
+			ChargeHist4->SetBins(20,minCharge[2],maxCharge[2]);
+			ChargeHist6->SetBins(20,minCharge[3],maxCharge[3]);
 			
-			StartHist0->SetBins(15,minStart[0],maxStart[0]);
-			StartHist2->SetBins(15,minStart[1],maxStart[1]);
-			StartHist4->SetBins(15,minStart[2],maxStart[2]);
-			StartHist6->SetBins(15,minStart[3],maxStart[3]);
+			StartHist0->SetBins(20,minStart[0],maxStart[0]);
+			StartHist2->SetBins(20,minStart[1],maxStart[1]);
+			StartHist4->SetBins(20,minStart[2],maxStart[2]);
+			StartHist6->SetBins(20,minStart[3],maxStart[3]);
 			
 			c1->cd(1);
 			ChargeHist0->Draw();
