@@ -23,8 +23,6 @@ void analisi(TString file){
 	TH1I *ChargeHist0 = new TH1I();
 	TH1F *StartHist0 = new TH1F();
 	
-	//istogrammi della distribuzione delle cariche e del punto di inizio traslato
-	
 	ChargeHist0->SetNameTitle("Istogramma Cariche Cherenkov","Distribuzione Integrali delle forme d'onda Cherenkov");
 	StartHist0->SetNameTitle("Istogramma Starting Point Cherenkov", "Distribuzione del punto di inizio Cherenkov rispetto alla media dei PMT");
 	
@@ -233,7 +231,7 @@ void analisi(TString file){
 				for(int z=signalStart[u]+1; z < signalEnd[u]; z++){         //Stiamo tenendo i primi due punti che superano il cutoff, eventualmente si scartano
 			  		chargeValue[u] += (doubleCh[u][z]*time[z]);
 				}
-				if(chargeValue[u]>maxCharge[u]){                       //aggiorno valore del massimo e minimo della carica per gli istogrammi
+				if(chargeValue[u]>maxCharge[u]){
 				    maxCharge[u]=chargeValue[u];
 				} 
 				if(chargeValue[u]<minCharge[u]){
@@ -246,7 +244,7 @@ void analisi(TString file){
 		    	meanTime=(signalStart[2]+signalStart[3])/2.;
 			
 			
-			for(int kk=0; kk<4; kk++){                                //traslo il punto di partenza e aggiorno il valore massimo e minimo per gli istogrammi
+			for(int kk=0; kk<4; kk++){
 			      shiftedStart[kk]=signalStart[kk]-meanTime;
 						      
 			      if(shiftedStart[kk]>maxStart[kk]){
@@ -266,7 +264,7 @@ void analisi(TString file){
 			isGoodEventFlag->Fill();
 			
 			
-			ChargeHist0->Fill(chargeValue[0]);                   //riempio istogrammi
+			ChargeHist0->Fill(chargeValue[0]);
 			ChargeHist2->Fill(chargeValue[1]);
 			ChargeHist4->Fill(chargeValue[2]);
 			ChargeHist6->Fill(chargeValue[3]);
@@ -335,7 +333,7 @@ void analisi(TString file){
 			
 			gPad->Update();
 			
-			ChargeHist0->SetBins(10,minCharge[0],maxCharge[0]);                    //disegno istogrammi
+			ChargeHist0->SetBins(10,minCharge[0],maxCharge[0]);
 			ChargeHist2->SetBins(15,minCharge[1],maxCharge[1]);
 			ChargeHist4->SetBins(15,minCharge[2],maxCharge[2]);
 			ChargeHist6->SetBins(15,minCharge[3],maxCharge[3]);
@@ -397,6 +395,16 @@ void analisi(TString file){
 			
 	}
 	
+	
+	ChargeHist0->Write("chargeHistCherenkov");
+	ChargeHist2->Write("chargeHistScint");
+	ChargeHist4->Write("chargeHistPMT1");
+	ChargeHist6->Write("chargeHistPMT2");
+	
+	StartHist0->Write("startHistCherenkov");
+	StartHist2->Write("startHistScint");
+	StartHist4->Write("startHistPMT1");
+	StartHist6->Write("startHistPMT2");
 	
 	
 
