@@ -18,8 +18,10 @@ void analisi(TString file){
     TCanvas *c0 = new TCanvas("c0","c0",300,10,600,600);
     TCanvas *c1 = new TCanvas("c1","c1",1000,10,600,600);
     TCanvas *c2 = new TCanvas("c2","c2", 1000,700,600,600);
+TCanvas *c3 = new TCanvas("c3","c3", 1000,700,600,600);
     c1->Divide(2,2);
     c2->Divide(2,2);
+    c3->Divide(2,2);
     /*
     TH1F *ChargeHist0 = new TH1F("chargehist0","Charge Hist 0", 50, 0.,14000.);
     TH1F *StartHist0 = new TH1F("startHist0","Starting time ch0",50, 0.,400.);
@@ -39,7 +41,7 @@ void analisi(TString file){
     TH1F *StartHist6 = new TH1F("startHist6","Starting time ch6",50, 0.,400.);
     */
     //ATTENZIONE IN QUESTE DEFINIZIONI NON TUTTI GLI EVENTI SONO NEGLI ISTOGRAMMI CAMBIA IL RANGE PER MIGLIOR DIVISIONI DEI BIN
-        TH1F *ChargeHist0 = new TH1F("chargehist0","Charge Hist 0", 50, 0.,4000.);
+    TH1F *ChargeHist0 = new TH1F("chargehist0","Charge Hist 0", 50, 0.,4000.);
     TH1F *StartHist0 = new TH1F("startHist0","Starting time ch0",50, 0.,400.);
     
 
@@ -56,7 +58,12 @@ void analisi(TString file){
     TH1F *ChargeHist6 = new TH1F("chargehist6","Charge Hist 6", 25, 0.,23000.);
     TH1F *StartHist6 = new TH1F("startHist6","Starting time ch6",50, 0.,400.);
     
-  
+    TH1F *ShTime0  =  new TH1F("ShifitedTime0","Shifted starting time ch0",40,-30.,30.);
+    TH1F *ShTime2  =  new TH1F("ShifitedTime2","Shifted starting time ch2",15,-5.,10.);
+    TH1F *ShTime4  =  new TH1F("ShifitedTime4","Shifted starting time ch4",17,-4.,5.);
+    TH1F *ShTime6  =  new TH1F("ShifitedTime6","Shifted starting time ch6",17,-4.,5.);
+
+
     
     TFile fin(file.Data());
      
@@ -72,6 +79,7 @@ void analisi(TString file){
     Int_t count=0;
     Int_t p =0;
     Int_t q =0;
+    Int_t duration =0;
     
     Double_t threshold[4]={0.};
     
@@ -160,8 +168,7 @@ void analisi(TString file){
         }
         
         isGoodEvent=0;
-        p=0;
-        q=0;
+       
         
         
         t1->GetEntry(entry);
@@ -239,6 +246,7 @@ void analisi(TString file){
             for(int u=0; u<4; u++){
                 p=0;
                 q=0;
+		duration =0;
                    if(sigma[u]!=0.){
                        threshold[u]=-3.*sigma[u];
                    }else{
@@ -257,6 +265,14 @@ void analisi(TString file){
                 
                 //----------calcolo signalEnd-----------------------
 		signalEnd[u]=signalStart[u]+signalDuration[u];
+		duration=p+signalDuration[u];
+		if(duration>nsample-1){
+		  duration=nsample-1);
+		}
+		
+		if(signalEnd[u]>time[nsample-1]){
+		  signalEnd[u]=time[nsample-1];
+		}
                 
                 
                 if(signalStart[u]>maxStart[u]){
@@ -266,14 +282,16 @@ void analisi(TString file){
                     minStart[u]=signalStart[u];
                 
             	}
+
+		
                 
        
                 //----------calcolo CARICA-----------------------
                 
                 
-                    cout << entry  <<"     " << signalDuration[u]+p<<endl;
+		 //cout << entry  <<"     " << meanTime<<endl;
                 
-                for(int z = p; z < signalDuration[u]+p; z++){ //Stiamo tenendo i primi due punti che superano il cutoff, eventualmente si scartano
+                for(int z = p; z <= duration; z++){ //Stiamo tenendo i primi due punti che superano il cutoff, eventualmente si scartano
                     chargeValue[u] += abs(doubleCh[u][z]*(time[z]-time[z-1]));
                 
                 }
@@ -285,10 +303,13 @@ void analisi(TString file){
                     minCharge[u]=chargeValue[u];
                 }
                
-            }
-            
+            } 
+            meanTime=0.5*(signalStart[2]+signalStart[3]);
               
-            
+            for(int u=0;u<4;u++){
+
+shiftedStart[u]= signalStart[u]-meanTime;
+}
         
             
             
@@ -311,6 +332,11 @@ void analisi(TString file){
             StartHist6->Fill(signalStart[3]);
         
             
+	    ShTime0->Fill(shiftedStart[0]);
+	    ShTime2->Fill(shiftedStart[1]);
+	    ShTime4->Fill(shiftedStart[2]);
+	    ShTime6->Fill(shiftedStart[3]);
+
             
             
             //GRAFICI----------------------------------------------
@@ -393,8 +419,21 @@ void analisi(TString file){
             
             c2->cd(4);
             StartHist6->Draw();
+
+	    c3->cd(1);
+            ShTime0->Draw();
+            
+            c3->cd(2);
+            ShTime2->Draw();
+            
+            c3->cd(3);
+            ShTime4->Draw();
+            
+            c3->cd(4);
+            ShTime6->Draw();
+
             gPad->Update();
-           c0->WaitPrimitive();
+           //c0->WaitPrimitive();
             //c0->Clear();
             
             //FINE GRAFICI--------------------------------------------
