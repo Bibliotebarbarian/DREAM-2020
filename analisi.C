@@ -1,4 +1,3 @@
-//analisi.C
 //#define NSAMPLE nsample-1
 #define INITIALSAMPLES 90
 #define STARTCUTOFF .15
@@ -18,7 +17,7 @@ void analisi(TString file){
     TCanvas *c0 = new TCanvas("c0","c0",300,10,600,600);
     TCanvas *c1 = new TCanvas("c1","c1",1000,10,600,600);
     TCanvas *c2 = new TCanvas("c2","c2", 1000,700,600,600);
-TCanvas *c3 = new TCanvas("c3","c3", 1000,700,600,600);
+    TCanvas *c3 = new TCanvas("c3","c3", 1000,700,600,600);
     c1->Divide(2,2);
     c2->Divide(2,2);
     c3->Divide(2,2);
@@ -26,7 +25,6 @@ TCanvas *c3 = new TCanvas("c3","c3", 1000,700,600,600);
     TH1F *ChargeHist0 = new TH1F("chargehist0","Charge Hist 0", 50, 0.,14000.);
     TH1F *StartHist0 = new TH1F("startHist0","Starting time ch0",50, 0.,400.);
     
-
     TH1F *ChargeHist2 = new TH1F("chargehist2","Charge Hist 2", 50, 0.,450E3);
     TH1F *StartHist2 = new TH1F("startHist2","Starting time ch2",50, 0.,400.);
     
@@ -35,7 +33,6 @@ TCanvas *c3 = new TCanvas("c3","c3", 1000,700,600,600);
     TH1F *ChargeHist4 = new TH1F("chargehist4","Charge Hist 4", 50, 0.,30000.);
     TH1F *StartHist4 = new TH1F("startHist4","Starting time ch4",50, 0.,400.);
     
-
     
     TH1F *ChargeHist6 = new TH1F("chargehist6","Charge Hist 6", 50, 0.,30000.);
     TH1F *StartHist6 = new TH1F("startHist6","Starting time ch6",50, 0.,400.);
@@ -59,9 +56,9 @@ TCanvas *c3 = new TCanvas("c3","c3", 1000,700,600,600);
     TH1F *StartHist6 = new TH1F("startHist6","Starting time ch6",50, 0.,400.);
     
     TH1F *ShTime0  =  new TH1F("ShifitedTime0","Shifted starting time ch0",40,-30.,30.);
-    TH1F *ShTime2  =  new TH1F("ShifitedTime2","Shifted starting time ch2",15,-5.,10.);
-    TH1F *ShTime4  =  new TH1F("ShifitedTime4","Shifted starting time ch4",17,-4.,5.);
-    TH1F *ShTime6  =  new TH1F("ShifitedTime6","Shifted starting time ch6",17,-4.,5.);
+    TH1F *ShTime2  =  new TH1F("ShifitedTime2","Shifted starting time ch2",15,-1000.,1000.);
+    TH1F *ShTime4  =  new TH1F("ShifitedTime4","Shifted starting time ch4",17,-1000.,1000.);
+    TH1F *ShTime6  =  new TH1F("ShifitedTime6","Shifted starting time ch6",17,-1000.,1000.);
 
 
     
@@ -100,6 +97,10 @@ TCanvas *c3 = new TCanvas("c3","c3", 1000,700,600,600);
     double media[4]={0.};
     double sigma[4]={0.};
     
+    Double_t mediaTempo;
+    Double_t sigmaTempo;
+    Int_t newCount;
+    
     
     
     cout << "number of entries : " << nentries << endl;	//nentries sono gli eventi
@@ -124,12 +125,14 @@ TCanvas *c3 = new TCanvas("c3","c3", 1000,700,600,600);
     Double_t shiftedStart[4]={0};
     Int_t nsample;
     
-    Double_t maxStart[4]={0};
-    Double_t minStart[4]={1000,1000,1000,1000};
+    Double_t maxStart[4]={0.};
+    Double_t minStart[4]={1000.,1000.,1000.,1000.};
     
     Double_t minCharge[4]={50000.,200000.,500000.,500000.};
     Double_t maxCharge[4]={0.};
     
+    Double_t maxShift[4]={-1000.,-1000.,-1000.,-1000.};
+    Double_t minShift[4]={ 1000.,1000.,1000.,1000.};
     
     t1->SetBranchAddress("nsample",&nsample);
     
@@ -146,6 +149,7 @@ TCanvas *c3 = new TCanvas("c3","c3", 1000,700,600,600);
     TBranch* shiftedStartBranch = t1 -> Branch("shiftedStart", shiftedStart, "shiftedStart[4]/D");
     TBranch* chargeValueBranch = t1 -> Branch("chargeValue", chargeValue, "chargeValue[4]/D");
     TBranch* isGoodEventFlag = t1 -> Branch("isGoodEvent", &isGoodEvent, "isGoodEvent/I");     //Creo Branch per i nuovi dati che mi sto calcolando
+    
     
     
     
@@ -213,7 +217,7 @@ TCanvas *c3 = new TCanvas("c3","c3", 1000,700,600,600);
         
         
         
-        for(int l=0;l<2;l++){
+        for(int l=0;l<4;l++){
             
             min[l]= TMath::MinElement(1000, doubleCh[l]);	//calcola i minimi per cherenkov e scintillatore
             minpoint[l]=TMath::LocMin(1000, doubleCh[l]);	//trova il punto dell'array corrispondente al minimo
@@ -226,11 +230,6 @@ TCanvas *c3 = new TCanvas("c3","c3", 1000,700,600,600);
                 }
             }
         }
-        
-        min[2]= TMath::MinElement(1000, doubleCh[2]);	//calcola i minimi per PMT1
-        minpoint[2]=TMath::LocMin(1000, doubleCh[2]);	//trova il punto dell'array corrispondente al minimo
-        min[3]= TMath::MinElement(1000, doubleCh[3]);	//calcola i minimi per PMT1
-        minpoint[3]=TMath::LocMin(1000, doubleCh[3]);	//trova il punto dell'array corrispondente al minimo
         
         
         
@@ -267,7 +266,7 @@ TCanvas *c3 = new TCanvas("c3","c3", 1000,700,600,600);
 		signalEnd[u]=signalStart[u]+signalDuration[u];
 		duration=p+signalDuration[u];
 		if(duration>nsample-1){
-		  duration=nsample-1);
+		  duration=nsample-1;
 		}
 		
 		if(signalEnd[u]>time[nsample-1]){
@@ -308,8 +307,18 @@ TCanvas *c3 = new TCanvas("c3","c3", 1000,700,600,600);
               
             for(int u=0;u<4;u++){
 
-shiftedStart[u]= signalStart[u]-meanTime;
-}
+		shiftedStart[u]= signalStart[u]-meanTime;
+		if(shiftedStart[u]>maxShift[u]){
+                    maxShift[u]=shiftedStart[u];
+               }
+            	if(shiftedStart[u]<minShift[u]){
+                    minShift[u]=shiftedStart[u];
+                
+	     
+	    	}
+	    
+	    	
+            }
         
             
             
@@ -338,6 +347,22 @@ shiftedStart[u]= signalStart[u]-meanTime;
 	    ShTime6->Fill(shiftedStart[3]);
 
             
+            if(entry>1){
+		    ChargeHist0->SetBins(30,minCharge[0],maxCharge[0]);
+		    ChargeHist2->SetBins(30,minCharge[1],maxCharge[1]);
+		    ChargeHist4->SetBins(30,minCharge[2],maxCharge[2]);
+		    ChargeHist6->SetBins(30,minCharge[3],maxCharge[3]);
+		    
+		    StartHist0->SetBins(30,minStart[0],maxStart[0]);
+		    StartHist2->SetBins(30,minStart[1],maxStart[1]);
+		    StartHist4->SetBins(30,minStart[2],maxStart[2]);
+		    StartHist6->SetBins(30,minStart[3],maxStart[3]);
+		    
+		    //ShTime0->SetBins(60,minShift[0],maxShift[0]);
+		    ShTime2->SetBins(60,minShift[1],maxShift[1]);
+		    ShTime4->SetBins(60,minShift[2],maxShift[2]);
+		    ShTime6->SetBins(60,minShift[3],maxShift[3]);
+            }
             
             //GRAFICI----------------------------------------------
             
@@ -433,58 +458,70 @@ shiftedStart[u]= signalStart[u]-meanTime;
             ShTime6->Draw();
 
             gPad->Update();
-           //c0->WaitPrimitive();
+	    //c0->WaitPrimitive();
             //c0->Clear();
             
             //FINE GRAFICI--------------------------------------------
             
         }else{								//Il tree deve essere sempre riempito per non dare errori
-            //Riempiamo di zeri
+            //Riempiamo di 99999
             for(int u=0; u<4; u++){
-                minpoint[u] = 0;
-                signalStart[u] = 0;
-                signalEnd[u] = 0;
-                chargeValue[u] = 0.;
+                minpoint[u] = 99999;
+                signalStart[u] = 99999;
+                signalEnd[u] = 99999;
+                chargeValue[u] = 99999.;
+                shiftedStart[u] = 99999.;
             }
             isGoodEvent=0;
             
             signalMinBranch->Fill();
             signalStartBranch->Fill();
             signalEndBranch->Fill();
+            shiftedStartBranch->Fill();
             chargeValueBranch->Fill();
             isGoodEventFlag->Fill();
         }
         
         
     }
-    
 
-    
-    
-         /*   ChargeHist0->SetBins(20,minCharge[0],maxCharge[0]);
-            ChargeHist2->SetBins(20,minCharge[1],maxCharge[1]);
-            ChargeHist4->SetBins(20,minCharge[2],maxCharge[2]);
-            ChargeHist6->SetBins(20,minCharge[3],maxCharge[3]);
-            
-            StartHist0->SetBins(20,minStart[0],maxStart[0]);
-            StartHist2->SetBins(20,minStart[1],maxStart[1]);
-            StartHist4->SetBins(20,minStart[2],maxStart[2]);
-            StartHist6->SetBins(20,minStart[3],maxStart[3]);
-*/
 
     ChargeHist0->Write("chargeHistCherenkov");
     ChargeHist2->Write("chargeHistScint");
     ChargeHist4->Write("chargeHistPMT1");
     ChargeHist6->Write("chargeHistPMT2");
     
-    /*StartHist0->Write("startHistCherenkov");
-    StartHist2->Write("startHistScint");
-    StartHist4->Write("startHistPMT1");
-    StartHist6->Write("startHistPMT2");*/
-
+    ShTime0->Write("startHistCherenkov");
+    ShTime2->Write("startHistScint");
+    ShTime4->Write("startHistPMT1");
+    ShTime6->Write("startHistPMT2");
+    
+    
+    mediaTempo = ShTime0->GetMean();
+    sigmaTempo = ShTime0->GetMeanError();
+    sigmaTempo *= sqrt(ShTime0->GetEffectiveEntries());
+    
+    cout<<mediaTempo<< " +/- "<< sigmaTempo<< " " << ShTime0->GetEffectiveEntries() << endl;
+    newCount = count;
+    
+    
+    Double_t readShiftedStart[4]={0};
+    Int_t readIsGoodEvent=0;
+    t1->SetBranchAddress("shiftedStart", &readShiftedStart);
+    t1->SetBranchAddress("isGoodEvent", &readIsGoodEvent);
+    
+    
+    for(int iii=0; iii<nentries; iii++){
+    t1->GetEntry(iii);
+    	if(readIsGoodEvent && abs(readShiftedStart[0] - mediaTempo) > 3.*sigmaTempo){
+    		isGoodEvent =0;
+    		isGoodEventFlag->Fill();
+    		newCount--;
+    	}
+    }
     
     t1->Write("analysisTree");
-    cout<<"Il numero di eventi selezionati è:  "<<count<<endl;   // stampa il numero di grafici "buoni"
+    cout<<"Il numero di eventi selezionati è:  "<<count<< endl << "Dopo il controllo dei tempi: " << newCount<< endl;   // stampa il numero di grafici "buoni"
     fin.Close();
     output.Close();
     
