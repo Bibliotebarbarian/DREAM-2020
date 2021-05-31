@@ -10,7 +10,7 @@
 
 #include <string>
 #include <cmath>
-void original(TString file){
+void histo(TString file){
 	
 	
 
