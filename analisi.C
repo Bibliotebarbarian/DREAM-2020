@@ -3,6 +3,7 @@
 	#define INITIALSAMPLES 90
 	#define SCALING 0.2393
 	#define TIME_ERROR 0.0004
+	#define SATURATION -990
 	
 	
 	
@@ -44,6 +45,7 @@
 	
 	Int_t prova=0;
 	Int_t control[4]={0};
+	Long64_t entry;
 				//Variabili di supporto
 	
 	Double_t signalStart[4]={0.};            //Inizio dei segnali
@@ -106,7 +108,9 @@
 	TBranch* shiftedStartBranch = t2 -> Branch("shiftedStart", shiftedStart, "shiftedStart[4]/D");
 	TBranch* chargeValueBranch = t2 -> Branch("chargeValue", chargeValue, "chargeValue[4]/D");   //Creo Branch per i nuovi dati che mi sto calcolando
 	TBranch* meanTimeBranch = t2 -> Branch("meanTime", &meanTime, "meanTime/D");    
-	TBranch* shiftedChBranch = t2 -> Branch("shiftedCh", &shiftedCh, "shiftedCh/D");    
+	TBranch* shiftedChBranch = t2 -> Branch("shiftedCh", &shiftedCh, "shiftedCh/D");
+	TBranch* waveNumberBranch = t2 -> Branch("waveNumber", &entry, "waveNumber/I");
+	
 	
 	// in ingresso impulso proiettato in nuovo vettore (vuoto) stessa lunghezza di quello di partenza, di cui i primi 50 canali sono lasciati vuoti e dal 51 sovrascriviamo l'impulso vero partendo da starting time di ciascun evento fino a poco oltre starting time+ signalduration (aggiungiamo circa 10 sample in piu)
 	// secondo me conviene farlo in histo e poi mediamo 
@@ -115,7 +119,7 @@
 	
 	//FINE DICHIARAZIONE VARIABILI-------------------------------------------------------------------
 	
-	for(Long64_t entry = 0; entry < nentries; entry++) {       //Ciclo sugli eventi
+	for(entry = 0; entry < nentries; entry++) {       //Ciclo sugli eventi
 	    
 	    
 	    for(int ii=0; ii<4; ii++){		//Inizializzazione
@@ -183,7 +187,7 @@
 	        min[l]= TMath::MinElement(1000, doubleCh[l]);	//calcola i minimi per tutti e 4 i canali
 	        minpoint[l]=TMath::LocMin(1000, doubleCh[l]);	//trova il punto dell'array corrispondente al minimo
 	        
-	        if(min[l]< -5.*sigma[l] && doubleCh[l][minpoint[l]+1]<0. && doubleCh[l][minpoint[l]+2]<0. && doubleCh[l][minpoint[l]+3]<0.){
+	        if(min[l] > SATURATION && min[l]< -5.*sigma[l] && doubleCh[l][minpoint[l]+1]<0. && doubleCh[l][minpoint[l]+2]<0. && doubleCh[l][minpoint[l]+3]<0.){
 	            //controlla se il minimo è oltre 5 sigma e che i 3 punti successivi siano minori di zero
 	            //controlla se il minimo si trova prima di metà dei dati (potrebbe essere modificato per controllare che sia attorno al tempo del trigger
 	            if(minpoint[l] <= (nsample/2)){
@@ -445,8 +449,9 @@
 	      
 	      if(abs(shifting[0]-meanGauss[0]) > 3*sigmaGauss[0] || abs(shifting[1]-meanGauss[1]) > 3*sigmaGauss[1] ){
 		    isGoodEvent=0;
-		    
 		    goodCount--;
+		    
+		    
 	      }
 	      
 	      isGoodEventBranch->Fill();
@@ -464,9 +469,21 @@
 	TF1 *scint = new TF1("scint", "[0]*exp(x/[1])", 140., 580.);   
 	scint->SetParameters(-140.,-300.);
 	 
-	TF1 *cher = new TF1("cher", "[0]*exp(-x/326.1)+[1]", 140., 580.);   
-	cher->SetParameters(-140.,0.);
+
 	
+	c1->cd(2);
+	SP1-> SetTitle("Scintillator");
+	SP1->Fit("scint","R");
+	SP1-> GetXaxis()->SetTitle("Time (ns)");                  //gli assi adesso hanno un nome
+	SP1-> GetYaxis()->SetTitle("Voltage (mV)");
+	gStyle->SetOptFit(1111);
+	SP1->Draw();
+	
+	Double_t tau = scint->GetParameter(1);
+	
+	TF1 *cher = new TF1("cher", "[0]*exp(-x/[2])+[1]", 140., 580.);   
+	cher->SetParameters(-140.,0.);
+	cher->FixParameter(2, tau);
 	
 	c1->cd(1);
 	SP0-> SetTitle("Cherenkov");
@@ -477,14 +494,7 @@
 	SP0->Draw();
 	
 	
-	c1->cd(2);
-	SP1-> SetTitle("Scintillator");
-	SP1->Fit("scint","R");
-	SP1-> GetXaxis()->SetTitle("Time (ns)");                  //gli assi adesso hanno un nome
-	SP1-> GetYaxis()->SetTitle("Voltage (mV)");
-	gStyle->SetOptFit(1111);
-	SP1->Draw();
-	
+
 	
 	
 	/*c4->Clear();
