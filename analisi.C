@@ -390,8 +390,8 @@
 	
 	                 //Selezione eventi tramite fit Gaussiano..............................
 	
-	TH1F FitShTime0= TH1F("Istogramma fit CH0", "Istogramma per fit Gaussiano", 200, minShift[0], maxShift[0]);  
-	TH1F FitShTime1= TH1F("Istogramma fit CH1", "Istogramma per fit Gaussiano", 200, minShift[1], maxShift[1]);  
+	TH1F FitShTime0= TH1F("Istogramma fit CH0", "Istogramma per fit Gaussiano", prova*2/3, minShift[0], maxShift[0]);  
+	TH1F FitShTime1= TH1F("Istogramma fit CH1", "Istogramma per fit Gaussiano", prova*2/3, minShift[1], maxShift[1]);  
 	TF1** fitGaussian= new TF1*[2];
 	
 	Double_t shifting[4]={0.};
@@ -415,10 +415,10 @@
 	}
 	
 	fitGaussian[0]->SetParameters(FitShTime0.GetBinContent(FitShTime0.GetMaximumBin()),FitShTime0.GetMean(),FitShTime0.GetRMS());
-	cout<<0<<": \t"<<FitShTime0.GetBinContent(FitShTime0.GetMaximumBin()) <<" "<<FitShTime0.GetMean()<<" "<<FitShTime0.GetRMS()<<endl;
+	//cout<<0<<": \t"<<FitShTime0.GetBinContent(FitShTime0.GetMaximumBin()) <<" "<<FitShTime0.GetMean()<<" "<<FitShTime0.GetRMS()<<endl;
 	
 	fitGaussian[1]->SetParameters(FitShTime1.GetBinContent(FitShTime1.GetMaximumBin()),FitShTime1.GetMean(),FitShTime1.GetRMS());
-	cout<<1<<": \t"<<FitShTime1.GetBinContent(FitShTime1.GetMaximumBin()) <<" "<<FitShTime1.GetMean()<<" "<<FitShTime1.GetRMS()<<endl;
+	//cout<<1<<": \t"<<FitShTime1.GetBinContent(FitShTime1.GetMaximumBin()) <<" "<<FitShTime1.GetMean()<<" "<<FitShTime1.GetRMS()<<endl;
 	
         FitShTime0.Fit("Gaussian_0","W N");
 	FitShTime1.Fit("Gaussian_1","W N");
