@@ -18,9 +18,9 @@
 	
 	
 	TCanvas *c0 = new TCanvas("c0","c0",300,10,600,600);
-	TCanvas *c1 = new TCanvas("c1","c1",900,10,600,600);
+
 	
-	c1->Divide(2);
+	
 	TFile fin(file.Data());
 	TTree* t1 = (TTree*)fin.Get("datatree");
 
@@ -43,7 +43,7 @@
 	
 	Double_t threshold[4]={0.};
 	
-	Int_t prova=0;
+	
 	Int_t control[4]={0};
 	Long64_t entry;
 				//Variabili di supporto
@@ -68,9 +68,9 @@
 	
 	
 	Double_t doubleCh[4][1000]={0};	                //dal DAQ i dati sono interi vanno convertiti a double per grafico
-	Double_t shiftedCh[2][1100]={0.};
+
 	
-	Double_t smoothP[2][1000]={0.};                   //waveform media per canali cherenkov e scintillatore   I PMT NON SERVONO NON CE LI METTETE
+
 	
 	Double_t errx[1000]={0};         //errori sul tempo (uguali per ogni canale)
 	Double_t erry[4][1000]={0};           //errori sui canali (diversi per ogni canale)
@@ -108,8 +108,7 @@
 	TBranch* shiftedStartBranch = t2 -> Branch("shiftedStart", shiftedStart, "shiftedStart[4]/D");
 	TBranch* chargeValueBranch = t2 -> Branch("chargeValue", chargeValue, "chargeValue[4]/D");   //Creo Branch per i nuovi dati che mi sto calcolando
 	TBranch* meanTimeBranch = t2 -> Branch("meanTime", &meanTime, "meanTime/D");    
-	TBranch* shiftedChBranch = t2 -> Branch("shiftedCh", &shiftedCh, "shiftedCh/D");
-	TBranch* waveNumberBranch = t2 -> Branch("waveNumber", &entry, "waveNumber/I");
+	TBranch* doubleChBranch = t2 -> Branch("doubleCh", doubleCh, "doubleCh[4][1000]/D");
 	
 	
 	// in ingresso impulso proiettato in nuovo vettore (vuoto) stessa lunghezza di quello di partenza, di cui i primi 50 canali sono lasciati vuoti e dal 51 sovrascriviamo l'impulso vero partendo da starting time di ciascun evento fino a poco oltre starting time+ signalduration (aggiungiamo circa 10 sample in piu)
@@ -132,10 +131,6 @@
 	        signalStartSample[ii]=0;
 	    }
 	    
-	    for(int iii=0; iii<1100; iii++){
-	      shiftedCh[0][iii]=0.;
-	      shiftedCh[1][iii]=0.;
-	    }
 	    
 	    
 	    p=0;
@@ -208,117 +203,91 @@
 	        
 	        for(int u=0; u<4; u++){
 	            p=0;
-	            if(sigma[u]!=0.){
-	            	threshold[u] = -3.*sigma[u];
-	        	}else{
-	            	threshold[u] = -1.5;
-	            }
-	            
-	            
-	            //----------calcolo signalStart-----------------------
-	         
-	            while(doubleCh[u][p]>threshold[u] || doubleCh[u][p+1]>threshold[u] || doubleCh[u][p+2]>threshold[u]){
-	                p++;
-	            }
-	            signalStart[u] = time[p];
-	            signalStartSample[u] = p;
-	            
+		    if(sigma[u]!=0.){
+		    	threshold[u] = -3.*sigma[u];
+			}else{
+		    	threshold[u] = -1.5;
+		    }
+		    
+		    
+		    //----------calcolo signalStart-----------------------
+		 
+		    while(doubleCh[u][p]>threshold[u] || doubleCh[u][p+1]>threshold[u] || doubleCh[u][p+2]>threshold[u]){
+		        p++;
+		    }
+		    signalStart[u] = time[p];
+
+		    
 	
-	            
-	            
-	            if(signalStart[u] > maxStart[u]){
-	                maxStart[u] = signalStart[u];
-	            }
-	            if(signalStart[u] < minStart[u]){
-	            	minStart[u] = signalStart[u];
-	            
-	        	}
+		    
+		    
+		    if(signalStart[u] > maxStart[u]){
+		        maxStart[u] = signalStart[u];
+		    }
+		    if(signalStart[u] < minStart[u]){
+		    	minStart[u] = signalStart[u];
+		    
+			}
 	
-	            //----------calcolo CARICA-----------------------
-	            
-	            
+		    //----------calcolo CARICA-----------------------
+		    
+		    
 	
-	            
-	            for(int z = p; z < signalDuration[u]+p; z++){ //Stiamo tenendo i primi due punti che superano il cutoff, eventualmente si scartano
-	                chargeValue[u] += abs(doubleCh[u][z]*(time[z]-time[z-1]));
-	            }
-	            
-	            if(chargeValue[u] > maxCharge[u]){
-	                maxCharge[u] = chargeValue[u];
-	            }
-	            if(chargeValue[u] < minCharge[u]){
-	                minCharge[u] = chargeValue[u];
-	            }
-	           
-	        }
-	        
-	        meanTime=0.5*(signalStart[2] + signalStart[3]);
-	          
-	        for(int u=0; u<4; u++){
-	            shiftedStart[u] = signalStart[u]-meanTime;
-	            
-	            if(shiftedStart[u] > maxShift[u]){
-	            	maxShift[u] = shiftedStart[u];
+		    
+		    for(int z = p; z < signalDuration[u]+p; z++){ //Stiamo tenendo i primi due punti che superano il cutoff, eventualmente si scartano
+		        chargeValue[u] += abs(doubleCh[u][z]*(time[z]-time[z-1]));
+		    }
+		    
+		    if(chargeValue[u] > maxCharge[u]){
+		        maxCharge[u] = chargeValue[u];
+		    }
+		    if(chargeValue[u] < minCharge[u]){
+		        minCharge[u] = chargeValue[u];
+		    }
+		   
+		}
+		
+		meanTime=0.5*(signalStart[2] + signalStart[3]);
+		  
+		for(int u=0; u<4; u++){
+		    shiftedStart[u] = signalStart[u]-meanTime;
+		    
+		    if(shiftedStart[u] > maxShift[u]){
+		    	maxShift[u] = shiftedStart[u];
 				}
-	            if(shiftedStart[u] < minShift[u]){
-	            	minShift[u] = shiftedStart[u];
+		    if(shiftedStart[u] < minShift[u]){
+		    	minShift[u] = shiftedStart[u];
 				}
 				
 		}
 		
-		
-	        
-	    	//    il controllo l'ho commentato visto che c'è quello sul fit gaussiano
-	    
-	    
-	    	/*if( signalStart[0]<(meanTime-40.) || signalStart[0]>(meanTime+20.) ||signalStart[1]<(meanTime-20.) || signalStart[1]>(meanTime+20.) ){
-	    		control[0]=0;
-	    		control[1]=0;
-	       }*/
-		} 
-		
-		
-		if(control[0]==1 && control[1]==1){
-			prova++;
-		        
-		       
-		    for(int f=0; f<710;f++){     //for sui sample da signalstart a signalend shiftati di 50 posizioni per allineare tutto per cherenkov
-				smoothP[0][f+50] += doubleCh[0][signalStartSample[0]+f];
-				shiftedCh[0][f+50] = doubleCh[0][signalStartSample[0]+f];
-		    }
-		      
-		    for(int f=0; f<710;f++){     //for sui sample da signalstart a signalend shiftati di 50 posizioni per allineare tutto per scintillatore SONO SEPARATI PERCHE CONSIDERIAMO DUE RANGE DIVERSI
-		    	smoothP[1][f+50] += doubleCh[1][signalStartSample[1]+f];
-			shiftedCh[1][f+50] = doubleCh[1][signalStartSample[1]+f];
-		    }
 		    
-		    
-		        
+			
 		       t2->Fill();    //riempio il tree con solo le forme d'onda buone
-		        //for su i canali cherenkov e scintillatore 
-		        
-		        
-		        
-		        
+			//for su i canali cherenkov e scintillatore 
+			
+			
+			
+			
 			//GRAFICI DELLE FORME D'ONDA----------------------------------------------
 		    //I GRAFICI DEGLI ISTOGRAMMI STANNO SU HISTO.C
-		        
-		        
+			
+		/*	
 		    TGraphErrors* WF0 = new TGraphErrors(nsample-1,time,doubleCh[0],errx,erry[0]);
 		
-			TGraphErrors* WF2 = new TGraphErrors(nsample-1,time,doubleCh[1],errx,erry[1]);
-		                                   // grafici con error bars
+		    TGraphErrors* WF2 = new TGraphErrors(nsample-1,time,doubleCh[1],errx,erry[1]);
+			                           // grafici con error bars
 		    TGraphErrors* WF4 = new TGraphErrors(nsample-1,time,doubleCh[2],errx,erry[2]);       
 		
 		    TGraphErrors* WF6 = new TGraphErrors(nsample-1,time,doubleCh[3],errx,erry[3]);
 		
-		        
-		        
+			
+			
 		    std::string s = std::to_string(entry+1);
 		    char const *pchar = s.c_str();                     //il nome di ciascun canvas è il numero dell'evento
 		    c0->SetTitle(pchar);
-		        
-		        
+			
+			
 		    c0->Clear();
 		    c0->Divide(2,2);
 		    c0->cd(1);
@@ -353,24 +322,16 @@
 		    WF6->Draw();
 		     
 		    gPad->Update();
-		        
+			
 		     
 		    //c0->WaitPrimitive();
 		    //c0->Clear();
-		        
+			*/
 		    //FINE GRAFICI--------------------------------------------
-		        
+			
 		}
 	
 	
-	}
-	
-	
-	
-	for(int g=0;g<2;g++){    //for su i canali cherenkov e scintillatore
-	       for(int f=0; f<1000;f++){     //for sui sample da signalstart a signalend shiftati di 50 posizioni per allineare tutto  
-	        	smoothP[g][f]/=prova;      //dividiamo la somma totale per il numero finale di eventi buoni
-	        }
 	}
 	        
 	
@@ -394,15 +355,15 @@
 	
 	                 //Selezione eventi tramite fit Gaussiano..............................
 	
-	TH1F FitShTime0= TH1F("Istogramma fit CH0", "Istogramma per fit Gaussiano", prova*2/3, minShift[0], maxShift[0]);  
-	TH1F FitShTime1= TH1F("Istogramma fit CH1", "Istogramma per fit Gaussiano", prova*2/3, minShift[1], maxShift[1]);  
+	TH1F FitShTime0= TH1F("Istogramma fit CH0", "Istogramma per fit Gaussiano", count*2/3, minShift[0], maxShift[0]);  
+	TH1F FitShTime1= TH1F("Istogramma fit CH1", "Istogramma per fit Gaussiano", count*2/3, minShift[1], maxShift[1]);  
 	TF1** fitGaussian= new TF1*[2];
 	
 	Double_t shifting[4]={0.};
 	
 	t2->SetBranchAddress("shiftedStart",&shifting);
 	
-	for (int jjj=0; jjj<prova; jjj++){
+	for (int jjj=0; jjj<count; jjj++){
 	  
 	      t2->GetEntry(jjj);
 	      
@@ -437,11 +398,11 @@
 		
 	}
 	
-	Int_t goodCount=prova;
+	Int_t goodCount=count;
 	
 	TBranch* isGoodEventBranch = t2 -> Branch("isGoodEvent", &isGoodEvent, "isGoodEvent/I");
 	
-	for (int jjj=0; jjj<prova; jjj++){
+	for (int jjj=0; jjj<count; jjj++){
 	  
 	      isGoodEvent=1;
 	  
@@ -457,41 +418,10 @@
 	      isGoodEventBranch->Fill();
 	}
 	
-	cout<<"Numero eventi in 3 sigma: "<< goodCount <<endl;
-	
-			  //FIT..............................
-	
-	TGraph* SP0 = new TGraph(nsample-1,time,smoothP[0]);    
-	TGraph* SP1 = new TGraph(nsample-1,time,smoothP[1]); 
-	
-	
-	  
-	TF1 *scint = new TF1("scint", "[0]*exp(x/[1])", 140., 580.);   
-	scint->SetParameters(-140.,-300.);
-	 
 
 	
-	c1->cd(2);
-	SP1-> SetTitle("Scintillator");
-	SP1->Fit("scint","R");
-	SP1-> GetXaxis()->SetTitle("Time (ns)");                  //gli assi adesso hanno un nome
-	SP1-> GetYaxis()->SetTitle("Voltage (mV)");
-	gStyle->SetOptFit(1111);
-	SP1->Draw();
-	
-	Double_t tau = scint->GetParameter(1);
-	
-	TF1 *cher = new TF1("cher", "[0]*exp(-x/[2])+[1]", 140., 580.);   
-	cher->SetParameters(-140.,0.);
-	cher->FixParameter(2, tau);
-	
-	c1->cd(1);
-	SP0-> SetTitle("Cherenkov");
-	SP0->Fit("cher","R");
-	SP0-> GetXaxis()->SetTitle("Time (ns)");                  //gli assi adesso hanno un nome
-	SP0-> GetYaxis()->SetTitle("Voltage (mV)");
-	gStyle->SetOptFit(1111);
-	SP0->Draw();
+			  //FIT..............................
+
 	
 	
 
@@ -508,7 +438,8 @@
 	
 	
 	cout<<"Numero di eventi selezionati:  "<< count << endl;   // stampa il numero di grafici "buoni"
-	//cout<<"Numero di eventi selezionati dopo la seconda analisi:  "<< prova << endl;
+	cout<<"Numero eventi in 3 sigma: "<< goodCount <<endl;
+	//cout<<"Numero di eventi selezionati dopo la seconda analisi:  "<< count << endl;
 	fin.Close();
 	output.Close();
 	
