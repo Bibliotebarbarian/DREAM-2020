@@ -7,9 +7,12 @@
 #define TIME_ERROR 0.0004
 #define SATURATION_VALUE -990.
 
-
+#include <iostream>
 #include <string>
 #include <cmath>
+
+using std::cout;
+using std::endl;
 void histo(TString file){
 	
 	
@@ -19,20 +22,18 @@ void histo(TString file){
 	TCanvas *c1 = new TCanvas("c1","c1",1000,10,600,600);
 	TCanvas *c2 = new TCanvas("c2","c2", 1000,700,600,600);
 	TCanvas *c3 = new TCanvas("c3","c3", 1000,700,600,600);
+	TCanvas *c4 = new TCanvas("c4","c4", 1000,700,600,600);
 	c1->Divide(2,2);
 	c2->Divide(2,2);
 	c3->Divide(2,2);
+	c4->Divide(2);
 	
 	
 	TH1F **ChargeHist = new TH1F*[4];
 	TH1F **StartHist = new TH1F*[4];	
 	TH1F **ShTime  =  new TH1F*[4];
 
-	for(int i=0; i<4; i++){
-		ChargeHist[i] 	= new TH1F(TString::Format("chargehist%d",i), TString::Format("Charge Hist %d", i*2), 50, 0.,0.);
-		StartHist[i]	= new TH1F(TString::Format("startHist%d",i), TString::Format("Starting time ch%d", i*2), 50, 0.,0.);
-		ShTime[i]		= new TH1F(TString::Format("ShiftedTime%d",i), TString::Format("Shifted starting time ch%d", i*2), 50, 0., 0.);
-	}
+	
 	
 	
 	TFile rootf(file.Data());
@@ -62,18 +63,24 @@ void histo(TString file){
 	t1->SetBranchAddress("signalStart", &signalStart);
 	t1->SetBranchAddress("shiftedStart", &shiftedStart);
 	t1->SetBranchAddress("chargeValue",&chargeValue);
-	//t1->SetBranchAddress("minCharge",&minCharge);       //non servono perchè uso range che esclude eventi oltre 3 sigma
-	//t1->SetBranchAddress("maxCharge",&maxCharge);
-	//t1->SetBranchAddress("minStart",&minStart);
-	//t1->SetBranchAddress("maxStart",&maxStart);
-	//t1->SetBranchAddress("minShift",&minShift);
-	//t1->SetBranchAddress("maxShift",&maxShift);
+	t1->SetBranchAddress("minCharge",&minCharge);       //non servono perchè uso range che esclude eventi oltre 3 sigma
+	t1->SetBranchAddress("maxCharge",&maxCharge);
+	t1->SetBranchAddress("minStart",&minStart);
+	t1->SetBranchAddress("maxStart",&maxStart);
+	t1->SetBranchAddress("minShift",&minShift);
+	t1->SetBranchAddress("maxShift",&maxShift);
 	t1->SetBranchAddress("isGoodEvent",&isGoodEvent);
 	
 	cout << "number of entries : " << nentries << endl;	//nentries sono gli eventi
 	//nsamples sono i bin di ogni evento
 	
+	t1->GetEntry(0);
 	
+	for(int i=0; i<4; i++){
+		ChargeHist[i] 	= new TH1F(TString::Format("chargehist%d",i), TString::Format("Charge Hist %d", i*2), 100, minCharge[i], maxCharge[i]);
+		StartHist[i]	= new TH1F(TString::Format("startHist%d",i), TString::Format("Starting time ch%d", i*2), 100, minStart[i],maxStart[i]);
+		ShTime[i]		= new TH1F(TString::Format("ShiftedTime%d",i), TString::Format("Shifted starting time ch%d", i*2), 100, minShift[i], maxShift[i]);
+	}
 	//FINE DICHIARAZIONE VARIABILI-------------------------------------------------------------------
 	
 	for(Long64_t entry = 0; entry < nentries; entry++) {       //Ciclo sugli eventi
@@ -90,10 +97,12 @@ void histo(TString file){
 		}
 	}
 	
-	for(int i=0; i<4; i++){
+	
+	/*for(int i=0; i<4; i++){
 	
 	    minCharge[i]=ChargeHist[i]->GetXaxis()->GetBinCenter(ChargeHist[i]->FindFirstBinAbove());
 	    maxCharge[i]=ChargeHist[i]->GetXaxis()->GetBinCenter(ChargeHist[i]->FindLastBinAbove());
+	   
 	    
 	    minStart[i]=StartHist[i]->GetXaxis()->GetBinCenter(StartHist[i]->FindFirstBinAbove());
 	    maxStart[i]=StartHist[i]->GetXaxis()->GetBinCenter(StartHist[i]->FindLastBinAbove());
@@ -101,17 +110,19 @@ void histo(TString file){
 	    minShift[i]=ShTime[i]->GetXaxis()->GetBinCenter(ShTime[i]->FindFirstBinAbove());
 	    maxShift[i]=ShTime[i]->GetXaxis()->GetBinCenter(ShTime[i]->FindLastBinAbove());
 	
-	}
+	}*/
+	
+	
 	
 	for(int j=0; j<4; j++){
-		cout << minCharge[j] << " " << maxCharge[j] << " " << minStart[j] << " " << maxStart[j] << " " << minShift[j] << " " << maxShift[j] << endl;
-		ChargeHist[j]->SetBins(100, minCharge[j], maxCharge[j]);
-		StartHist[j]->SetBins(100, minStart[j], maxStart[j]);
-		ShTime[j]->SetBins(100, minShift[j], maxShift[j]);
+		//cout << minCharge[j] << " " << maxCharge[j] << " " << minStart[j] << " " << maxStart[j] << " " << minShift[j] << " " << maxShift[j] << endl;
+		//ChargeHist[j]->SetBins(100, minCharge[j], maxCharge[j]);
+		//StartHist[j]->SetBins(100, minStart[j], maxStart[j]);
+		//ShTime[j]->SetBins(100, minShift[j], maxShift[j]);
 		
-		ChargeHist[j]->Rebin();
-		StartHist[j]->Rebin();
-		ShTime[j]->Rebin();
+		//ChargeHist[j]->Rebin();
+		//StartHist[j]->Rebin();
+		//ShTime[j]->Rebin();
 	
 		c1->cd(j+1);
 		ChargeHist[j]->Draw();
@@ -123,6 +134,23 @@ void histo(TString file){
 		ShTime[j]->Draw();
 	
 	}
+	
+	
+	TF1 *landau0 = new TF1("landauCh0","[0]*TMath::Landau(x,[1],[2],1)",minCharge[0],maxCharge[0]);
+	TF1 *landau2 = new TF1("landauCh2","[0]*TMath::Landau(x,[1],[2],1)",minCharge[1],maxCharge[1]);
+	landau0->SetParameters(ChargeHist[0]->Integral(),ChargeHist[0]->GetXaxis()->GetBinCenter(ChargeHist[0]->GetMaximumBin()),ChargeHist[0]->GetRMS());  
+	landau2->SetParameters(ChargeHist[1]->Integral(),ChargeHist[1]->GetXaxis()->GetBinCenter(ChargeHist[1]->GetMaximumBin()),ChargeHist[1]->GetRMS()); 
+	
+	cout<<"\t"<<ChargeHist[0]->GetXaxis()->GetBinCenter(ChargeHist[0]->GetMaximumBin())<<"\t"<<ChargeHist[0]->GetRMS()<<endl;
+	
+	
+	c4->cd(1);
+	ChargeHist[0]->Fit("landauCh0"); 
+	c4->cd(2);
+	ChargeHist[1]->Fit("landauCh2"); 
+	
+	
+	c1->WaitPrimitive();
 	
 	/*ChargeHist0->Write("chargeHistCherenkov");
 	ChargeHist2->Write("chargeHistScint");
