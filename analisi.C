@@ -408,7 +408,7 @@
 	  
 	      t2->GetEntry(jjj);
 	      
-	      if(abs(shifting[0]-meanGauss[0]) > 3*sigmaGauss[0] || abs(shifting[1]-meanGauss[1]) > 3*sigmaGauss[1] ){
+	      if(abs(shifting[0]-meanGauss[0]) > 3*abs(sigmaGauss[0]) || abs(shifting[1]-meanGauss[1]) > 3*abs(sigmaGauss[1]) ){
 		    isGoodEvent=0;
 		    goodCount--;
 		    
