@@ -93,7 +93,7 @@ void cOverS(TString file){
 			Double_t Ac = cher->GetParameter(0);
 			Double_t As = scint->GetParameter(0);
 			
-			for(int f=0; f < 70; f++){
+			for(int f=0; f < 20; f++){
 				channels[1][startEntry[1]+f] *= (Ac/As);
 				Qc -= channels[1][startEntry[1]+f]/0.9866;
 			}
